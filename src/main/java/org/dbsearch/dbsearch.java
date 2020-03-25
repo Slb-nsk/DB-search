@@ -1,26 +1,14 @@
 package org.dbsearch;
 
+import org.dbsearch.services.OutputService;
+import org.dbsearch.services.QueryService;
+
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
 
 public class Dbsearch {
 
-    static void writeOutput(File file) {
-//       try {
-//            FileWriter writer = new FileWriter(file, false);
-//            writer.flush();
-//            writer.close();
-//
-//        } catch (IOException e) {
-//            System.out.println("Cannot write file");
-//            System.exit(1);
-//        }
-
-   }
-
     public static void main(String[] args) {
-        ErrorReport er = new ErrorReport();
 
         //Проверяем, все ли аргументы есть в командной строке
         if (args.length < 3) {
@@ -28,21 +16,25 @@ public class Dbsearch {
             System.exit(1);
         }
 
+        //берём аргументы из командной строки и присваиваем им читабельные имена
         String command = args[0];
         File inputFile = new File(args[1]);
         File outputFile = new File(args[2]);
 
         if (!(command.equals("search") || command.equals("stat"))) {
-            er.errorReporting(outputFile, "Unknown command");
+            OutputService output = new OutputService();
+            output.error(outputFile, "Unknown command");
         } else {
+            QueryService service = new QueryService();
             switch (command) {
                 case "search":
-                    //сделать поиск
+                    service.searchQuery(inputFile, outputFile);
                     break;
                 case "stat":
-                    //собрать статистику
+                    service.statQuery(inputFile, outputFile);
                     break;
             }
         }
+
     }
 }
