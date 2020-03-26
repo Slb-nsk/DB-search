@@ -1,12 +1,19 @@
 package org.dbsearch;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import org.dbsearch.services.OutputService;
 import org.dbsearch.services.QueryService;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 
 public class Dbsearch {
+    static JsonParser parser;
 
     public static void main(String[] args) {
 
@@ -21,18 +28,44 @@ public class Dbsearch {
         File inputFile = new File(args[1]);
         File outputFile = new File(args[2]);
 
-        if (!(command.equals("search") || command.equals("stat"))) {
-            OutputService output = new OutputService();
-            output.error(outputFile, "Unknown command");
+        //проверяем, является ли первый аргумент легальной командой
+        if (!(command.equals("search")) && !(command.equals("stat"))) {
+            System.out.println("Unknown command");
+            System.exit(1);
         } else {
-            QueryService service = new QueryService();
-            switch (command) {
-                case "search":
-                    service.searchQuery(inputFile, outputFile);
-                    break;
-                case "stat":
-                    service.statQuery(inputFile, outputFile);
-                    break;
+            //считываем входной файл в строку
+            StringBuilder contentBuilder = new StringBuilder();
+            String jsonString;
+            try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+                String sCurrentLine;
+                while ((sCurrentLine = br.readLine()) != null) {
+                    contentBuilder.append(sCurrentLine).append("\n");
+                }
+                jsonString = contentBuilder.toString();
+
+                //перерабатываем строку в JSON-объекты и передаём на обработку
+                try {
+                    JsonObject inputObject = parser.parseString(jsonString).getAsJsonObject();
+                    QueryService service = new QueryService();
+                    switch (command) {
+                        case "search":
+                            service.searchQuery(inputObject, outputFile);
+                            break;
+                        case "stat":
+                            service.statQuery(inputObject, outputFile);
+                            break;
+                    }
+
+                } catch (JsonParseException e) {
+                    OutputService output = new OutputService();
+                    output.error(outputFile, "Input file is not a valid JSON file.");
+                }
+
+                //если входной файл прочитать не удалось
+            } catch (IOException e) {
+                System.out.println("Cannot read file");
+                e.printStackTrace();
+                System.exit(1);
             }
         }
 
