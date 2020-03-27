@@ -78,12 +78,17 @@ public class QueryService {
                     JsonArray customers = new JsonArray();
 
                     //Сумма покупок всех покупателей за период
-                    int totalExpenses;
+                    int totalExpenses = 0;
 
                     //Средние затраты всех покупателей за период
-                    double avgExpenses = new BigDecimal(totalExpenses / customers.size())
-                            .setScale(2, RoundingMode.HALF_UP)
-                            .doubleValue();
+                    double avgExpenses;
+                    if (customers.size() > 0) {
+                        avgExpenses = new BigDecimal(totalExpenses / customers.size())
+                                .setScale(2, RoundingMode.HALF_UP)
+                                .doubleValue();
+                    } else {
+                        avgExpenses = 0;
+                    }
 
                     output.stat(outputFile, totalDays, customers, totalExpenses, avgExpenses);
 
