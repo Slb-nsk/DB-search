@@ -5,6 +5,9 @@ import com.google.gson.*;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class QueryService {
     OutputService output = new OutputService();
@@ -56,21 +59,55 @@ public class QueryService {
         } else if (!inputObject.has("endDate")) {
             output.error(outputFile, "'endDate' missing missing in input file.");
         } else {
-            //Вычислить общее количество дней из двух дат, включительно, без выходных
-            int totalDays;
+            //Обработка дат
+            LocalDate startDate;
+            try {
+                startDate = LocalDate.parse(inputObject.get("startDate").getAsString());
 
-            //Данные по покупателям за этот период, упорядоченные по общей стоимости покупок по убыванию
-            JsonArray customers = new JsonArray();
+                LocalDate endDate;
+                try {
+                    endDate = LocalDate.parse(inputObject.get("endDate").getAsString());
 
-            //Сумма покупок всех покупателей за период
-            int totalExpenses;
+                    if (startDate.isAfter(endDate)) {
+                        output.error(outputFile, "'startDate' should not be after 'endDate'.");
+                    }
 
-            //Средние затраты всех покупателей за период
-            double avgExpenses = new BigDecimal(totalExpenses/ customers.size())
-                    .setScale(2, RoundingMode.HALF_UP)
-                    .doubleValue();
+                    int totalDays = calculateTotalDays(startDate, endDate);
 
-            output.stat(outputFile, totalDays, customers, totalExpenses, avgExpenses);
+                    //Данные по покупателям за этот период, упорядоченные по общей стоимости покупок по убыванию
+                    JsonArray customers = new JsonArray();
+
+                    //Сумма покупок всех покупателей за период
+                    int totalExpenses;
+
+                    //Средние затраты всех покупателей за период
+                    double avgExpenses = new BigDecimal(totalExpenses / customers.size())
+                            .setScale(2, RoundingMode.HALF_UP)
+                            .doubleValue();
+
+                    output.stat(outputFile, totalDays, customers, totalExpenses, avgExpenses);
+
+                } catch (DateTimeParseException e) {
+                    output.error(outputFile, "Wrong format of 'startDate'.");
+                }
+
+            } catch (DateTimeParseException e) {
+                output.error(outputFile, "Wrong format of 'endDate'.");
+            }
         }
+    }
+
+    //Вычислить общее количество дней из двух дат, включительно, без выходных
+    private int calculateTotalDays(LocalDate startDate, LocalDate endDate) {
+        int totalDays = 0;
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            if (!(currentDate.getDayOfWeek().equals(DayOfWeek.SATURDAY) ||
+                    currentDate.getDayOfWeek().equals(DayOfWeek.SUNDAY))) {
+                totalDays++;
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+        return totalDays;
     }
 }
