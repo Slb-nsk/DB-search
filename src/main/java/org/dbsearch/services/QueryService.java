@@ -2,15 +2,20 @@ package org.dbsearch.services;
 
 import com.google.gson.*;
 
+import org.dbsearch.dao.DbDAO;
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class QueryService {
-    OutputService output = new OutputService();
+    private final OutputService output = new OutputService();
+    private final DbDAO dao = new DbDAO();
 
     //обработка операции search
     public void searchQuery(JsonObject inputObject, File outputFile) {
@@ -25,6 +30,15 @@ public class QueryService {
                 JsonArray resultList = new JsonArray();
                 if (criteria.has("lastName")) {
                     //выдать список покупателей с этой фамилией
+                    String lastName = criteria.get("lastName").getAsString();
+
+                    List<String> customers = dao.customersWithSelectedLastName(outputFile, lastName);
+                    for (String firstName : customers) {
+                        JsonObject customer = new JsonObject();
+                        customer.add("lastName", new JsonPrimitive(lastName));
+                        customer.add("firstName", new JsonPrimitive(firstName));
+                        resultList.add(customer);
+                    }
 
                 } else if (criteria.has("productName") && criteria.has("minTimes")) {
                     //выдать список покупателей, купивших данный товар не менее указанного числа раз
