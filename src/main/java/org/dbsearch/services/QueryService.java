@@ -7,11 +7,9 @@ import org.dbsearch.dao.DbDAO;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 
 public class QueryService {
     private final OutputService output = new OutputService();
@@ -31,23 +29,24 @@ public class QueryService {
                 if (criteria.has("lastName")) {
                     //выдать список покупателей с этой фамилией
                     String lastName = criteria.get("lastName").getAsString();
-
-                    List<String> customers = dao.customersWithSelectedLastName(outputFile, lastName);
-                    for (String firstName : customers) {
-                        JsonObject customer = new JsonObject();
-                        customer.add("lastName", new JsonPrimitive(lastName));
-                        customer.add("firstName", new JsonPrimitive(firstName));
-                        resultList.add(customer);
-                    }
+                    resultList = dao.customersWithSelectedLastName(outputFile, lastName);
 
                 } else if (criteria.has("productName") && criteria.has("minTimes")) {
                     //выдать список покупателей, купивших данный товар не менее указанного числа раз
+                    String productName = criteria.get("productName").getAsString();
+                    int minTimes = criteria.get("minTimes").getAsInt();
+                    resultList = dao.customersBoughtThisProductAtLeastThisTimes(outputFile, productName, minTimes);
 
                 } else if (criteria.has("minExpenses") && criteria.has("maxExpenses")) {
                     //выдать список покупателей, у которых общая стоимость всех покупок за всё время попадает в интервал
+                    int minExpenses = criteria.get("minExpenses").getAsInt();
+                    int maxExpenses = criteria.get("maxExpenses").getAsInt();
+                    resultList = dao.customersSpentMoneyBetweenThisAndThis(outputFile, minExpenses, maxExpenses);
 
                 } else if (criteria.has("badCustomers")) {
                     //выдать список покупателей, купивших меньше всего товаров
+                    int badCustomersNumber = criteria.get("badCustomers").getAsInt();
+                    resultList = dao.badCustomers(outputFile, badCustomersNumber);
 
                 } else {
                     output.error(outputFile, "Input file contains unknown criteria.");
@@ -89,10 +88,14 @@ public class QueryService {
                     int totalDays = calculateTotalDays(startDate, endDate);
 
                     //Данные по покупателям за этот период, упорядоченные по общей стоимости покупок по убыванию
-                    JsonArray customers = new JsonArray();
+                    JsonArray customers = dao.statisticFromPeriod(outputFile,startDate, endDate);
 
                     //Сумма покупок всех покупателей за период
                     int totalExpenses = 0;
+                    for (JsonElement customer: customers){
+                        totalExpenses += customer.getAsJsonObject().get("totalExpenses").getAsInt();
+                    }
+
 
                     //Средние затраты всех покупателей за период
                     double avgExpenses;
@@ -103,6 +106,7 @@ public class QueryService {
                     } else {
                         avgExpenses = 0;
                     }
+
 
                     output.stat(outputFile, totalDays, customers, totalExpenses, avgExpenses);
 
@@ -123,9 +127,8 @@ public class QueryService {
         while (!currentDate.isAfter(endDate)) {
             if (!(currentDate.getDayOfWeek().equals(DayOfWeek.SATURDAY) ||
                     currentDate.getDayOfWeek().equals(DayOfWeek.SUNDAY))) {
-                totalDays++;
+                totalDays++;}
                 currentDate = currentDate.plusDays(1);
-            }
         }
         return totalDays;
     }
