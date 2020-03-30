@@ -1,0 +1,97 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.2
+-- Dumped by pg_dump version 9.6.2
+
+-- Started on 2020-03-30 07:28:54
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET search_path = public, pg_catalog;
+
+--
+-- TOC entry 2144 (class 0 OID 19536)
+-- Dependencies: 186
+-- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY customers (customerid, firstname, lastname) FROM stdin;
+1	Антон	Иванов
+2	Николай	Иванов
+3	Валентин	Петров
+\.
+
+
+--
+-- TOC entry 2159 (class 0 OID 0)
+-- Dependencies: 185
+-- Name: customers_customerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('customers_customerid_seq', 3, true);
+
+
+--
+-- TOC entry 2146 (class 0 OID 19547)
+-- Dependencies: 188
+-- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY products (productid, productname, price) FROM stdin;
+1	Хлеб	100
+2	Сметана	200
+3	Колбаса	300
+4	Сыр	400
+5	Минеральная вода	500
+\.
+
+
+--
+-- TOC entry 2160 (class 0 OID 0)
+-- Dependencies: 187
+-- Name: products_productid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('products_productid_seq', 5, true);
+
+
+--
+-- TOC entry 2148 (class 0 OID 19558)
+-- Dependencies: 190
+-- Data for Name: purchases; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY purchases (purchaseid, customerid, productid, purchasedate) FROM stdin;
+1	1	1	2020-04-01
+2	1	1	2020-04-02
+3	1	1	2020-04-03
+4	1	1	2020-04-04
+5	2	1	2020-04-04
+6	1	2	2020-04-04
+\.
+
+
+--
+-- TOC entry 2161 (class 0 OID 0)
+-- Dependencies: 189
+-- Name: purchases_purchaseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('purchases_purchaseid_seq', 6, true);
+
+
+-- Completed on 2020-03-30 07:28:54
+
+--
+-- PostgreSQL database dump complete
+--
+
